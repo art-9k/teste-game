@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termo Clone</title>
+    <style>
+        :root {
+            --cor-correta: #6aaa64;
+            --cor-posicao: #c9b458;
+            --cor-errada: #787c7e;
+            --cor-borda: #d3d6da;
+            --cor-fundo: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--cor-fundo);
+            margin: 0;
+            height: 100vh;
+        }
+
+        h1 {
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr);
+            gap: 5px;
+            padding: 10px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
+
+        .tile {
+            width: 55px;
+            height: 55px;
+            border: 2px solid var(--cor-borda);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: transform 0.3s;
+        }
+
+        /* Cores de feedback */
+        .correct {
+            background-color: var(--cor-correta);
+            border-color: var(--cor-correta);
+            color: white;
+        }
+
+        .present {
+            background-color: var(--cor-posicao);
+            border-color: var(--cor-posicao);
+            color: white;
+        }
+
+        .absent {
+            background-color: var(--cor-errada);
+            border-color: var(--cor-errada);
+            color: white;
+        }
+
+        .active {
+            border-color: #555;
+        }
+
+        #keyboard {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .key-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+
+        .key {
+            padding: 15px 12px;
+            margin: 3px;
+            border-radius: 4px;
+            background-color: #d3d6da;
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Termo Clone</h1>
+
+    <div id="game-board"></div>
+
+    <div id="keyboard">
+        <div class="key-row" id="row1"></div>
+        <div class="key-row" id="row2"></div>
+        <div class="key-row" id="row3"></div>
+    </div>
+
+    <script>
+        const PALAVRA_DO_DIA = "TERMO"; // Você pode automatizar isso depois
+        let tentativaAtual = 0;
+        let letraAtual = 0;
+        let grid = ["", "", "", "", "", ""];
+
+        const board = document.getElementById("game-board");
+
+        // Criar o tabuleiro
+        for (let i = 0; i < 6; i++) {
+            const row = document.createElement("div");
+            row.className = "row";
+            for (let j = 0; j < 5; j++) {
+                const tile = document.createElement("div");
+                tile.className = "tile";
+                tile.id = `tile-${i}-${j}`;
+                row.appendChild(tile);
+            }
+            board.appendChild(row);
+        }
+
+        // Configurar Teclado
+        const teclas = [
+            ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+            ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+            ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DEL']
+        ];
+
+        teclas.forEach((row, i) => {
+            const rowDiv = document.getElementById(`row${i + 1}`);
+            row.forEach(tecla => {
+                const btn = document.createElement("button");
+                btn.textContent = tecla;
+                btn.className = "key";
+                btn.onclick = () => processarInput(tecla);
+                rowDiv.appendChild(btn);
+            });
+        });
+
+        function processarInput(tecla) {
+            if (tecla === "DEL") {
+                if (letraAtual > 0) {
+                    letraAtual--;
+                    grid[tentativaAtual] = grid[tentativaAtual].slice(0, -1);
+                    atualizarBoard();
+                }
+            } else if (tecla === "ENTER") {
+                if (letraAtual === 5) verificarPalavra();
+            } else if (letraAtual < 5 && tecla.length === 1) {
+                grid[tentativaAtual] += tecla;
+                letraAtual++;
+                atualizarBoard();
+            }
+        }
+
+        function atualizarBoard() {
+            for (let j = 0; j < 5; j++) {
+                const tile = document.getElementById(`tile-${tentativaAtual}-${j}`);
+                tile.textContent = grid[tentativaAtual][j] || "";
+                tile.classList.toggle("active", !!grid[tentativaAtual][j]);
+            }
+        }
+
+        function verificarPalavra() {
+            const palpite = grid[tentativaAtual];
+            const letrasResposta = PALAVRA_DO_DIA.split("");
+
+            for (let i = 0; i < 5; i++) {
+                const tile = document.getElementById(`tile-${tentativaAtual}-${i}`);
+                const letra = palpite[i];
+
+                if (letra === PALAVRA_DO_DIA[i]) {
+                    tile.classList.add("correct");
+                } else if (PALAVRA_DO_DIA.includes(letra)) {
+                    tile.classList.add("present");
+                } else {
+                    tile.classList.add("absent");
+                }
+            }
+
+            if (palpite === PALAVRA_DO_DIA) {
+                alert("Parabéns! Você acertou!");
+            } else if (tentativaAtual === 5) {
+                alert("Game Over! A palavra era " + PALAVRA_DO_DIA);
+            } else {
+                tentativaAtual++;
+                letraAtual = 0;
+            }
+        }
+
+        // Suporte ao teclado físico
+        window.addEventListener("keydown", (e) => {
+            const tecla = e.key.toUpperCase();
+            if (tecla === "BACKSPACE") processarInput("DEL");
+            else if (tecla === "ENTER") processarInput("ENTER");
+            else if (/^[A-Z]$/.test(tecla)) processarInput(tecla);
+        });
+    </script>
+</body>
+
+</html>
